@@ -26,7 +26,7 @@ app.post("/api/users", async (req, res) => {
   })
   return res.json({
     "username": user.username,
-    "__id": user._id
+    "_id": user._id
   })
 })
 
@@ -68,12 +68,13 @@ app.get("/api/users/:id/logs", async (req, res) => {
 
   const user = await User.findById(id)
   const exercises = await Exercise.find({ username: user.username })
+  .select("description duration date -_id")
   const count = await Exercise.countDocuments({ username: user.username })
 
   const logEntries = exercises.map(exercise => ({
     description: exercise.description,
     duration: exercise.duration,
-    date: exercise.date
+    date: exercise.date.toDateString()
   }))
 
   const log = await Log.create({

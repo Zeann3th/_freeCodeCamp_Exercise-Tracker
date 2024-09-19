@@ -65,13 +65,20 @@ app.post("/api/users/:id/exercises", async (req, res) => {
 
 app.get("/api/users/:id/logs", async (req, res) => {
   const id = req.params.id
+  const {from, to, limit} = req.query;
 
   const user = await User.findById(id)
-  const exercises = await Exercise.find({ username: user.username })
+  const query = {username: user.username}
+  if (from) query.date = { ...query.date, $gte: new Date(from) };
+  if (to) query.date = { ...query.date, $lte: new Date(to) };
+
+  let exercises = Exercise.find(query)
   .select("description duration date -_id")
+  if (limit) exercises = exercises.limit(parseInt(limit))
+  const data = await exercises
   const count = await Exercise.countDocuments({ username: user.username })
 
-  const logEntries = exercises.map(exercise => ({
+  const logEntries = data.map(exercise => ({
     description: exercise.description,
     duration: exercise.duration,
     date: exercise.date.toDateString()
